@@ -1,0 +1,15 @@
+port: 8080
+jwt_secret: best-secret-in-the-world
+database:
+  host: localhost
+  port: 5432
+  username: admin
+  password: password
+  dbname: trackly-db
+
+minio:
+  endpoint: localhost:9000
+  bucket_name: best-bucket
+  root_user: root
+  root_password: password
+  use_ssl: false

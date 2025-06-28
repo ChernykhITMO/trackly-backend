@@ -1,0 +1,514 @@
+openapi: 3.0.0
+info:
+  title: Auth API
+  version: 1.0.0
+  description: API для регистрации и входа пользователей с использованием JWT
+
+servers:
+  - url: http://localhost:8080
+    description: Production server
+
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Регистрация нового пользователя
+      description: Регистрирует нового пользователя и возвращает статус "ok"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+
+      responses:
+        '200':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Неверные данные для регистрации
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Пользователь с таким именем уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Вход пользователя
+      description: Аутентифицирует пользователя и возвращает JWT токен
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Неверные данные для входа
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Неверный логин или пароль
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/users/profile:
+    get:
+      security:
+        - BearerAuth: [ ]
+      tags:
+        - Users
+      summary: Получить профиль пользователя
+      responses:
+        '200':
+          description: Профиль пользователя
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+    put:
+      tags:
+        - Users
+      summary: Обновить профиль пользователя
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: Профиль обновлен
+
+  /api/users/avatar:
+    post:
+      tags:
+        - Users
+      summary: Загрузить аватар
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Аватар загружен
+    get:
+      tags:
+        - User
+      summary:  Получить аватар пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+  /api/habits:
+    get:
+      tags:
+        - Hobbies
+      summary: Получить список хобби пользователя
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Список хобби
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Habit'
+
+    post:
+      tags:
+        - Hobbies
+      summary: Создать новое хобби
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewHabit'
+      responses:
+        '201':
+          description: Хобби создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+
+  /api/habits/{habitId}:
+    parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Hobbies
+      summary: Получить детали хобби
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Детали хобби
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Habit'
+
+    put:
+      tags:
+        - Hobbies
+      summary: Обновить хобби
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HabitUpdate'
+      responses:
+        '200':
+          description: Хобби обновлено
+
+  /api/habits/{habitId}/score:
+    parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: integer
+    post:
+      tags:
+        - Hobbies score
+      summary: Записать время, потраченное на хобби
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreHabit'
+      responses:
+        '200':
+          description: Время записано
+  /api/habits/{habitId}/statistic:
+    parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Hobbies statistic
+      summary: Получение статустики
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: date-from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2017-01-01"
+        - name: date-to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2017-01-01"
+        - name: group-by
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/StatisticGroupBy'
+
+      responses:
+        '200':
+          description: Статистика по хобби за промежуток времени с групировкой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitStatisticResponse'
+  /api/habits/{habitId}/statistic/total:
+    parameters:
+      - name: habitId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Hobbies statistic
+      summary: Получение статустики
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: Суммарная статистика хобби
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HabitStatisticTotalResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      description: идентификатор пользователя
+      schema:
+        type: integer
+        example: 1
+    habitId:
+      name: habitId
+      in: path
+      required: true
+      description: идентификатор привычки
+      schema:
+        type: integer
+        example: 1
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+        - email
+        - password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+        username:
+          type: string
+        age:
+          type: integer
+
+    UserProfile:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        country:
+          type: string
+        city:
+          type: string
+        avatarUrl:
+          type: string
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        country:
+          type: string
+        city:
+          type: string
+
+    Habit:
+      type: object
+      required:
+        - todayValue
+        - name
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+        currentPlan:
+          $ref: '#/components/schemas/Plan'
+        notifications:
+          type: boolean
+        todayValue:
+          type: integer
+          description: "today in sec"
+
+    NewHabit:
+      type: object
+      properties:
+        name:
+          type: string
+        plan:
+          $ref: '#/components/schemas/Plan'
+        description:
+          type: string
+        notifications:
+          type: boolean
+      required:
+        - name
+        - plan
+
+    HabitUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        plan:
+          $ref: '#/components/schemas/Plan'
+        description:
+          type: string
+        notifications:
+          type: boolean
+
+    Plan:
+      type: object
+      properties:
+        planUnit:
+          $ref: '#/components/schemas/PlanUnit'
+        goal:
+          type: integer
+          description: "тут крч мы передаем значение в зависимости от плана, в минимальных единицах измерения, (метры, секунды, разы)"
+    PlanUnit:
+      type: string
+      enum: [ distance, time, count ]
+
+    ScoreHabit:
+      type: object
+      required:
+        - date
+        - value
+      properties:
+        date:
+          type: string
+          format: date-time
+        value:
+          type: integer
+          description: "тут крч мы передаем значение в минимальных единицах измерения, (метры, секунды, разы)"
+
+    HabitStatisticResponse:
+      type: object
+      required:
+        - period
+        - groupBy
+        - planUnit
+      properties:
+        groupBy:
+          $ref: '#/components/schemas/StatisticGroupBy'
+        planUnit:
+          $ref: '#/components/schemas/PlanUnit'
+        period:
+          type: array
+          items:
+            $ref: '#/components/schemas/PeriodValue'
+    PeriodValue:
+      type: object
+      required:
+        - interval
+        - value
+      properties:
+        interval:
+          type: string
+          description: "тут приходит в зависимости от типа, условно если мы выбрали день, то приходят дни недели, если месяц, то месяца, аналогично с годами"
+        value:
+          type: integer
+          description: "тут приходит значение в зависимости от типа"
+
+    HabitStatisticTotalResponse:
+      type: object
+      properties:
+        planUnit:
+          $ref: '#/components/schemas/PlanUnit'
+        total:
+          type: integer
+        averagePerDay:
+          type: integer
+
+    StatisticGroupBy:
+      type: string
+      enum: [ day, month, year ]
+    ErrorResponse:
+      required:
+        - code
+        - message
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+
+

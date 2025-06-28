@@ -1,0 +1,112 @@
+###
+
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "ars2@mail.ru",
+  "password": "123",
+  "username":"ars",
+  "age":5
+}
+
+###
+
+###
+
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "ars2@mail.ru",
+  "password": "123"
+}
+
+> {% client.global.set("auth_token", response.body.token); %}
+###
+
+###
+GET http://localhost:8080/api/users/profile
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+###
+
+###
+PUT http://localhost:8080/api/users/profile
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "username": "username",
+  "email": "ars2@mail.ru",
+  "dateOfBirth": "2025-02-04",
+  "country": "string",
+  "city": "string"
+}
+###
+
+###
+POST http://localhost:8080/api/habits
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "name": "string",
+  "plan": {
+    "planUnit": "distance",
+    "goal": 333
+  },
+  "description": "string",
+  "notifications": true
+}
+> {% client.global.set("habitId", response.body.id); %}
+###
+
+###
+GET http://localhost:8080/api/users/profile
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+###
+
+###
+GET http://localhost:8080/api/habits
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+###
+
+
+###
+
+POST http://localhost:8080/api/users/avatar
+Authorization: Bearer {{auth_token}}
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="avatar"; filename="avatar.png"
+
+< ./avatar.png
+###
+
+###
+GET http://localhost:8080/api/users/avatar
+Authorization: Bearer {{auth_token}}
+###
+
+
+###
+POST http://localhost:8080/api/habits/1/score
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "date": "2025-02-06T16:49:25.061Z",
+  "value": 111
+}
+###
+
+
+###
+http://localhost:8080/api/habits/1/statistic?date-from=2025-01-30&date-to=2025-02-06&group-by=day
+accept: application/json
+Authorization: Bearer {{auth_token}}
+###
